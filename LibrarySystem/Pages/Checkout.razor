@@ -1,0 +1,85 @@
+﻿@page "/checkout"
+@using LibrarySystem.Models
+@using System.Text.Json
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
+
+<h1>Checkout Selected Books</h1>
+@if (SelectedBooks != null && SelectedBooks.Any())
+{
+    <h3>Selected Books:</h3>
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped mt-3">
+            <thead class="thead-light">
+                <tr>
+                    <th>Select</th>
+                    <th>ISBN</th>
+                    <th>Author FirstName</th>
+                    <th>Author LasttName</th>
+                    <th>Title</th>
+                    <th>Publisher</th>
+                    <th>Genre</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var book in SelectedBooks)
+                {
+                    <tr>
+                        <td><input type="checkbox" @bind="book.IsSelected" /></td>
+                        <td>@book.ISBN</td>
+                        <td>@book.Author_FN</td>
+                        <td>@book.Author_LN</td>    
+                        <td>@book.Title</td>
+                        <td>@book.Publisher</td>
+                        <td>@book.Genre</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <button class="btn btn-primary" @onclick="CheckoutBooks">Checkout</button>
+    <button class="btn btn-danger" @onclick="RemoveSelectedBooks">Remove Selected Books</button>
+}
+else
+{
+    <p>No books selected for checkout.</p>
+}
+
+<a href="/find">Back to Find Page</a>
+
+@code {
+    List<Book> SelectedBooks { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var selectedBooksJson = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "SelectedBooks");
+
+        if (!string.IsNullOrEmpty(selectedBooksJson))
+        {
+            SelectedBooks = JsonSerializer.Deserialize<List<Book>>(selectedBooksJson);
+        }
+    }
+
+    async Task CheckoutBooks()
+    {
+        // Perform any necessary checkout logic here.
+
+        // Clear the selected books from local storage.
+        await JSRuntime.InvokeVoidAsync("localStorage.removeItem", "SelectedBooks");
+
+        // Redirect to the "Thank You" page.
+        NavigationManager.NavigateTo("/thankyou");
+    }
+
+    async Task RemoveSelectedBooks()
+    {
+        // Remove the selected books from the list.
+        SelectedBooks.RemoveAll(book => book.IsSelected);
+
+        // Update the local storage.
+        await JSRuntime.InvokeVoidAsync("localStorage.setItem", "SelectedBooks", JsonSerializer.Serialize(SelectedBooks));
+
+        // Refresh the page.
+        NavigationManager.NavigateTo("/checkout");
+    }
+}

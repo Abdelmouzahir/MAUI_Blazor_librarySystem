@@ -1,0 +1,174 @@
+﻿@page "/find"
+
+@using LibrarySystem.Data
+@using LibrarySystem.Models
+@using Microsoft.AspNetCore.Components
+@using System.Text.Json
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
+
+<h1>Find Which Book You Would Like To Reserve</h1>
+<div class="row">
+    <div class="col-md-4">
+        <div class="form-group">
+            <label for="search">Search</label>
+            <input type="text" class="form-control" id="search" @bind="searchText" placeholder="Search" />
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="form-group">
+            <label for="searchBy">Search By</label>
+            <select class="form-control" @bind="selectedSearchBy">
+                <option value="All">All</option>
+                <option value="Title">Title</option>
+                <option value="Author FirstName">Author FirstName</option>
+                <option value="Author LastName">Author LastName</option>
+                <option value="ISBN">ISBN</option>
+                <option value="Genre">Genre</option>
+                <option value="Publisher">Publisher</option>
+            </select>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <button class="btn btn-primary mt-4" @onclick="UpdateFilteredBooks">Search</button>
+    </div>
+</div>
+<h2 class="book-title-list">List of Books</h2>
+<div class="table-responsive">
+    <table class="table table-bordered table-striped mt-3">
+        <thead class="thead-light">
+            <tr>
+                <th>Select</th>
+                <th>ISBN</th>
+                <th>Author FirstName</th>
+                <th>Author LastName</th>
+                <th>Title</th>
+                <th>Publisher</th>
+                <th>Genre</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var book in filteredBooks)
+            {
+                <tr class="clickable-row">
+                    <td><input type="checkbox" @bind="book.IsSelected" /></td>
+                    <td>@book.ISBN</td>
+                    <td>@book.Author_FN</td>
+                    <td>@book.Author_LN</td>
+                    <td>@book.Title</td>
+                    <td>@book.Publisher</td>
+                    <td>@book.Genre</td>
+                </tr>
+            }
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="6" class="text-center">
+                    <button class="btn btn-primary" @onclick="AddSelectedBooksToCart">Add Selected Books to Cart</button>
+                </td>
+            </tr>
+        </tfoot>
+    </table>
+</div>
+
+@code {
+    class FindBook : Book
+    {
+        // add a property to the Book class to determine if the book is selected
+        public bool IsSelected { get; set; }
+    }
+    // method to add the selected books to the cart
+    List<Book> booksFromDB;
+    // create a list of books to store the filtered books
+    List<FindBook> filteredBooks = new List<FindBook>();
+    // create a property to store the search term
+    string searchText;
+    // create a property to store the search by 
+    string selectedSearchBy = "All";
+    // call the database to get all the books
+    protected override void OnInitialized()
+    {
+        LibraryDatabase database = new LibraryDatabase();
+        booksFromDB = database.Select();
+    }
+
+    void UpdateFilteredBooks()
+    {
+        // put an alert condition if the user does not enter a search term
+        if (searchText == null && selectedSearchBy != "All")
+        {
+            ShowAlert("Please enter a search term");
+            return;
+        }
+        // switch statement to determine which search term to use
+        switch (selectedSearchBy)
+        {
+            case "All": //select all the books
+                filteredBooks = booksFromDB
+                .Select(b => new FindBook { ISBN = b.ISBN, Author_FN = b.Author_FN, Author_LN = b.Author_LN, Title = b.Title, Publisher = b.Publisher, Genre = b.Genre }).ToList();
+                break;
+            case "Title": // select all the books that match with the title search term
+                filteredBooks = booksFromDB
+                    .Where(b => b.Title.ToLower().Contains(searchText.ToLower()))
+                    .Select(b => new FindBook { ISBN = b.ISBN, Author_FN = b.Author_FN, Author_LN = b.Author_LN ,Title = b.Title, Publisher = b.Publisher, Genre = b.Genre })
+                    .ToList();
+                break;
+            case "Author FirstName": // select all the books that match the author's first name search term
+                filteredBooks = booksFromDB
+                    .Where(b => b.Author_FN.ToLower().Contains(searchText.ToLower()))
+                    .Select(b => new FindBook { ISBN = b.ISBN, Author_FN = b.Author_FN, Author_LN = b.Author_LN, Title = b.Title, Publisher = b.Publisher, Genre = b.Genre })
+                    .ToList();
+                break;
+            case "Author LastName": // select all the books that match the author's last name search term
+                filteredBooks = booksFromDB
+                    .Where(b => b.Author_LN.ToLower().Contains(searchText.ToLower()))
+                    .Select(b => new FindBook { ISBN = b.ISBN, Author_FN = b.Author_FN, Author_LN = b.Author_LN, Title = b.Title, Publisher = b.Publisher, Genre = b.Genre })
+                    .ToList();
+                break;
+            case "ISBN": // select all the books that match the ISBN search term
+                filteredBooks = booksFromDB
+                    .Where(b => b.ISBN.ToLower().Contains(searchText.ToLower()))
+                    .Select(b => new FindBook { ISBN = b.ISBN, Author_FN = b.Author_FN, Author_LN = b.Author_LN, Title = b.Title, Publisher = b.Publisher, Genre = b.Genre })
+                    .ToList();
+                break;
+            case "Genre": // select all the books that match the genre search term
+                filteredBooks = booksFromDB
+                    .Where(b => b.Genre.ToLower().Contains(searchText.ToLower()))
+                    .Select(b => new FindBook { ISBN = b.ISBN, Author_FN = b.Author_FN, Author_LN = b.Author_LN, Title = b.Title, Publisher = b.Publisher, Genre = b.Genre })
+                    .ToList();
+                break;
+            case "Publisher": // select all the books that match the publisher search term
+                filteredBooks = booksFromDB
+                    .Where(b => b.Publisher.ToLower().Contains(searchText.ToLower()))
+                    .Select(b => new FindBook { ISBN = b.ISBN, Author_FN = b.Author_FN, Author_LN = b.Author_LN, Title = b.Title, Publisher = b.Publisher, Genre = b.Genre })
+                    .ToList();
+                break;
+            default: // select all the books
+                filteredBooks = booksFromDB.Select(b => new FindBook { ISBN = b.ISBN, Author_FN = b.Author_FN, Author_LN = b.Author_LN, Title = b.Title, Publisher = b.Publisher, Genre = b.Genre }).ToList();
+                break;
+        }
+        // if the search term does not match any books, display an alert
+        if (filteredBooks.Count == 0)
+        {
+            ShowAlert("Sorry! we can't find the book that you are looking for 😥");
+        }
+        
+    }
+    // method to add the selected books to the cart
+    void AddSelectedBooksToCart()
+    {
+        var booksToAddToCart = filteredBooks.Where(book => book.IsSelected).ToList();
+        
+        var selectedBooksJson = JsonSerializer.Serialize(booksToAddToCart);
+        // store the selected books in the local storage
+        JSRuntime.InvokeVoidAsync("localStorage.setItem", "SelectedBooks", selectedBooksJson);
+        // navigate to the checkout page
+        NavigationManager.NavigateTo("/checkout");
+    }
+    // method to show an alert
+    async void ShowAlert(string message)
+    {
+        //Show alert
+        await Application.Current.MainPage.DisplayAlert("Oops!", message, "Ok");
+    }
+}

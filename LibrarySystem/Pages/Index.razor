@@ -1,0 +1,32 @@
+﻿@page "/"
+@using LibrarySystem
+
+<img src="images/libraryimage.png" alt="library Image"  height="60" width="60" />
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h1 class="card-title">Welcome to the Library</h1>
+                    <p class="card-text">Please select from the left side what you would like to do.</p>
+                    <button @onclick="NavigateToFindBookPage" class="btn btn-primary">Find a Book</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+@code {
+    // Import the NavigationManager service
+    [Inject]
+    private NavigationManager NavigationManager { get; set; }
+
+    // Method to navigate to FindBook page
+    private void NavigateToFindBookPage()
+    {
+        NavigationManager.NavigateTo("/find");
+    }
+}
